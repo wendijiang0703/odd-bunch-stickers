@@ -353,7 +353,8 @@ const Engine = (() => {
     } finally { clearTimeout(t); }
     let j = {}; try { j = await r.json(); } catch (e) { /* not JSON */ }
     if (!r.ok) {
-      const err = j.error || {}, reason = (err.details || []).map(d => d.reason).find(Boolean) || err.status || "";
+      const err = (Array.isArray(j) ? j[0] || {} : j).error || {};   // Google sometimes wraps the error in a list
+      const reason = (err.details || []).map(d => d.reason).find(Boolean) || err.status || (r.status === 401 ? "API_KEY_INVALID" : "");
       const msg = `Gemini error ${r.status}${reason ? " " + reason : ""}: ${err.message || r.statusText}`;
       const hints = {API_KEY_INVALID: "Google says this API key is not valid. Copy it again from aistudio.google.com/apikey",
                      ACCESS_TOKEN_TYPE_UNSUPPORTED: "Google says this API key is not valid. Copy it again from aistudio.google.com/apikey",
