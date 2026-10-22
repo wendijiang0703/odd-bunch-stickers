@@ -22,10 +22,10 @@ const Engine = (() => {
 
   async function init() {
     const [cfg, presets, samples] = await Promise.all(
-      ["data/config.json", "data/presets.json", "data/samples.json"].map(u => fetch(u).then(r => r.json())));
+      ["data/config.json", "data/presets.json", "data/samples.json"].map(u => fetch(`${u}?v=${window.SITE_VERSION || ""}`).then(r => r.json())));
     CFG = cfg; PRESETS = presets;
     await Promise.all(Object.keys(CFG.props).map(t => new Promise((res, rej) => {
-      const im = new Image(); im.onload = () => { STICKERS[t] = im; res(); }; im.onerror = rej; im.src = `stickers/${t}.png`;
+      const im = new Image(); im.onload = () => { STICKERS[t] = im; res(); }; im.onerror = rej; im.src = `stickers/${t}.png?v=${window.SITE_VERSION || ""}`;
     })));
     await loadCV();
     try { await document.fonts.load("800 40px Nunito"); await document.fonts.load("italic 30px Lora"); } catch (e) { /* system fonts */ }
