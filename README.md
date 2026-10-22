@@ -3,7 +3,7 @@
 A student prototype (RCA / Imperial IDE 2 group project, "Odd Bunch") that turns wonky, out-of-spec
 vegetables into little characters for their packaging, so the odd one is the fun one to pick.
 
-**Try it:** https://wendijiang0703.github.io/odd-bunch-stickers/
+**Try it:** https://wendijiang.com/odd-bunch-stickers/
 
 ## How to test
 
