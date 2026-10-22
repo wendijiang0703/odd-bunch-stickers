@@ -1,0 +1,324 @@
+{
+ "system_prompt": "You design stickers for \"Odd Bunch\" supermarket packs, which turn wonky vegetables into little characters. You get a photo cropped tight to ONE vegetable. Make a shopper laugh or go \"aww\" in one second.\n\nThe style is deliberately minimal: only a few plain stickers (dot eyes, a simple mouth, blush, stick arms and legs). The joke comes from COMPOSITION: what the veg's shape suggests, and the pose, size and placement of those few stickers. Never decorate for the sake of it.\n\nHow to think:\n1. In `ideas`, write three different readings of the silhouette, each a character DOING something, e.g. \"gym bro flexing both arms\", \"toddler with arms up asking to be carried\", \"nervous potato peeking sideways\", \"proud hands-on-hips pose\", \"sprinting with legs mid-stride\", \"sitting with little legs dangling\", \"two friends hugging\". Use the veg's own lumps: side lumps can be shoulders or cheeks, a bump on top a head, a long end a neck or a tail, a cleft two legs or two friends (always choose the wholesome reading).\n2. Pick the funniest or cutest idea the real shape supports and commit to it.\n3. Build the pose with arms and legs. Arms start AT the edge of the veg (shoulder touching the outline) and mostly stick OUT into the empty space beside it, so the left arm's centre is usually left of the veg (x below 0.1) and the right arm's right of it (x above 0.9); only cross the body on purpose (hugging, hands on hips). Legs start at the bottom edge and go down, centred below the veg (y around 1.05 to 1.2), a little apart. Angle them to tell the story: both arm_bent up = flexing or cheering, one raised arm = waving, arm_bent with the hand at the side of the body = hands on hips, legs at different angles = running, tiny legs under a big body = funny proportions.\n4. Face: small and simple. Put it where the story needs it (often high, or off-centre to show which way the character looks). Cute = eyes close together and low, tiny mouth, blush. Funny = an expression that matches the pose (mouth_open for shouting or cheering, mouth_frown for sulking).\nUsually 4 to 8 stickers. Fewer is better if the pose already reads.\n\nHard rules:\n- Original characters only: never a real person or an existing character, mascot or brand (no Mr Potato Head, no supermarket mascots, nothing from cartoons, films or games).\n- Kind and family friendly: never call the veg ugly, deformed or gross, never mock bodies; if a shape could read as rude, choose a wholesome reading instead.\n- Never more than 14 stickers.\n\nText (British English):\n- object_name: the character, 1 to 3 words, max 20 characters, e.g. \"Gym Spud\", \"Mini Sprinter\", \"Hug Twins\".\n- tagline: max 7 words, a pun that sells the veg, e.g. \"Pumped for your Sunday roast.\"\n- resembles: one short phrase. veg_type: the vegetable in one or two lowercase words, or \"no data\".\n\nStickers (type: what it is):\n- eye_dot: simple solid black eye (the default eye)\n- eye_happy: closed happy eye (^ shape)\n- mouth_smile: smiling line\n- mouth_open: round open 'O' mouth (surprised, singing, quacking)\n- mouth_frown: grumpy frown\n- blush: pink cheek blush\n- arm: stick arm with a white glove hand; the hand is on the right end\n- arm_bent: arm bent at the elbow, hand up; shoulder end at the bottom-left. Rotate/flip it to wave, flex, cheer or put a hand on a hip\n- leg: straight leg with a small shoe; hip end at the top, toes point right (flip for toes left)\n\nPlacing stickers:\n- x, y = the CENTRE of the sticker, normalised to the image you see: x 0 = left edge, 1 = right edge; y 0 = top, 1 = bottom. Arms and legs usually sit partly outside the veg, so x, y may go from -0.35 to 1.35.\n- size = sticker width as a fraction of the image's LONGER side (0.03 to 1.0). Typical: eye_dot 0.04-0.08, mouth 0.06-0.15, blush 0.06-0.1, arm 0.2-0.35, arm_bent 0.18-0.3, leg 0.15-0.3.\n- Stickers face RIGHT as drawn; flip true mirrors one (use it for the left arm or leg of a pair).\n- angle = clockwise rotation in degrees. Rotate arms and legs to set the pose.",
+ "schema": {
+  "type": "object",
+  "properties": {
+   "ideas": {
+    "type": "array",
+    "items": {
+     "type": "string"
+    }
+   },
+   "resembles": {
+    "type": "string"
+   },
+   "object_name": {
+    "type": "string"
+   },
+   "tagline": {
+    "type": "string"
+   },
+   "veg_type": {
+    "type": "string"
+   },
+   "props": {
+    "type": "array",
+    "items": {
+     "type": "object",
+     "properties": {
+      "type": {
+       "type": "string",
+       "enum": [
+        "eye_dot",
+        "eye_happy",
+        "mouth_smile",
+        "mouth_open",
+        "mouth_frown",
+        "blush",
+        "arm",
+        "arm_bent",
+        "leg"
+       ]
+      },
+      "x": {
+       "type": "number"
+      },
+      "y": {
+       "type": "number"
+      },
+      "size": {
+       "type": "number"
+      },
+      "angle": {
+       "type": "number"
+      },
+      "flip": {
+       "type": "boolean"
+      }
+     },
+     "required": [
+      "type",
+      "x",
+      "y",
+      "size",
+      "angle",
+      "flip"
+     ],
+     "additionalProperties": false
+    }
+   }
+  },
+  "required": [
+   "ideas",
+   "resembles",
+   "object_name",
+   "tagline",
+   "veg_type",
+   "props"
+  ],
+  "additionalProperties": false
+ },
+ "gemini": {
+  "model": "gemini-3.5-flash-lite",
+  "backups": [
+   "gemini-3.6-flash",
+   "gemini-3.8-flash"
+  ],
+  "thinking": "low",
+  "timeout_s": 90.0
+ },
+ "props": {
+  "eye_dot": {
+   "desc": "simple solid black eye (the default eye)",
+   "behind": false
+  },
+  "eye_happy": {
+   "desc": "closed happy eye (^ shape)",
+   "behind": false
+  },
+  "mouth_smile": {
+   "desc": "smiling line",
+   "behind": false
+  },
+  "mouth_open": {
+   "desc": "round open 'O' mouth (surprised, singing, quacking)",
+   "behind": false
+  },
+  "mouth_frown": {
+   "desc": "grumpy frown",
+   "behind": false
+  },
+  "blush": {
+   "desc": "pink cheek blush",
+   "behind": false
+  },
+  "arm": {
+   "desc": "stick arm with a white glove hand; the hand is on the right end",
+   "behind": false
+  },
+  "arm_bent": {
+   "desc": "arm bent at the elbow, hand up; shoulder end at the bottom-left. Rotate/flip it to wave, flex, cheer or put a hand on a hip",
+   "behind": false
+  },
+  "leg": {
+   "desc": "straight leg with a small shoe; hip end at the top, toes point right (flip for toes left)",
+   "behind": true
+  }
+ },
+ "safety": {
+  "banned_words": [
+   "ugly",
+   "gross",
+   "disgusting",
+   "deformed",
+   "deformity",
+   "freak",
+   "freaky",
+   "freakish",
+   "mutant",
+   "monster",
+   "rotten",
+   "reject",
+   "rejected",
+   "defective",
+   "hideous",
+   "grotesque",
+   "revolting",
+   "fat",
+   "fatty",
+   "obese",
+   "stupid",
+   "dumb",
+   "idiot",
+   "loser",
+   "creepy",
+   "sexy",
+   "sex",
+   "naked",
+   "nude",
+   "butt",
+   "bum",
+   "bottom",
+   "booty",
+   "boob",
+   "boobs",
+   "breast",
+   "penis",
+   "phallic",
+   "willy",
+   "testicle",
+   "testicles",
+   "balls",
+   "nipple",
+   "poo",
+   "poop",
+   "fart",
+   "pee",
+   "drunk",
+   "kill",
+   "dead",
+   "die"
+  ],
+  "protected_names": [
+   "mr potato head",
+   "mr. potato head",
+   "potato head",
+   "kevin the carrot",
+   "katie the carrot",
+   "bob the tomato",
+   "larry the cucumber",
+   "veggietales",
+   "shrek",
+   "pikachu",
+   "pokemon",
+   "mickey",
+   "minnie",
+   "donald duck",
+   "spongebob",
+   "minion",
+   "minions",
+   "elmo",
+   "kermit",
+   "garfield",
+   "simpson",
+   "peppa",
+   "paddington",
+   "gromit",
+   "teletubby",
+   "teletubbies",
+   "mr men",
+   "smurf",
+   "barbie",
+   "lego",
+   "disney",
+   "pixar",
+   "marvel",
+   "nintendo",
+   "mario",
+   "messi",
+   "ronaldo",
+   "beckham",
+   "rooney",
+   "salah",
+   "haaland",
+   "mbappe",
+   "bellingham",
+   "king charles",
+   "taylor swift",
+   "trump",
+   "biden",
+   "starmer"
+  ],
+  "max_props": 14,
+  "xy_range": [
+   -0.35,
+   1.35
+  ],
+  "size_range": [
+   0.03,
+   1.0
+  ]
+ },
+ "label": {
+  "mm": [
+   50,
+   70
+  ],
+  "dpi": 300
+ },
+ "rules": {
+  "striker": {
+   "name": "Sprinter",
+   "eyes": "eye_dot",
+   "mouth": "mouth_open",
+   "extra": null,
+   "resembles": "a long, speedy sprinter mid-dash",
+   "taglines": [
+    "Long on flavour.",
+    "Built for speed. Made for soup.",
+    "Goes the distance."
+   ]
+  },
+  "hugger": {
+   "name": "Best Buds",
+   "eyes": "eye_happy",
+   "mouth": "mouth_smile",
+   "extra": "blush",
+   "resembles": "two friends squeezed into one big hug",
+   "taglines": [
+    "Two hugs in one.",
+    "Twice the charm.",
+    "Better together."
+   ]
+  },
+  "grandad": {
+   "name": "Grandad",
+   "eyes": "eye_dot",
+   "mouth": "mouth_frown",
+   "extra": null,
+   "resembles": "a knobbly old grandad who has seen it all",
+   "taglines": [
+    "Looks rough. Tastes great.",
+    "Character-building since harvest.",
+    "Wrinkles are wisdom."
+   ]
+  },
+  "smiley": {
+   "name": "Sunny",
+   "eyes": "eye_happy",
+   "mouth": "mouth_open",
+   "extra": "blush",
+   "resembles": "a cheerful round face beaming at you",
+   "taglines": [
+    "Round of applause!",
+    "Full of sunshine.",
+    "Smiles all round."
+   ]
+  },
+  "cheeky": {
+   "name": "Cheeky",
+   "eyes": "eye_dot",
+   "mouth": "mouth_smile",
+   "extra": "blush",
+   "resembles": "a cheeky character leaning in with a grin",
+   "taglines": [
+    "Not perfect. Perfectly tasty.",
+    "Wonky outside, lovely inside.",
+    "Lean in for flavour."
+   ]
+  },
+  "sleepy": {
+   "name": "Sleepy",
+   "eyes": "eye_happy",
+   "mouth": "mouth_smile",
+   "extra": null,
+   "resembles": "a sleepy friend curled up for a nap",
+   "taglines": [
+    "Chilled and ready to roast.",
+    "Rested and roast-ready.",
+    "Easy-going, easy cooking."
+   ]
+  }
+ },
+ "no_data": "no data"
+}

@@ -1,0 +1,451 @@
+{
+  "_about": "Hand-written sticker plans for the sample photos, keyed by file name. Used only when no AI key is set, so the prototype can be demoed without an AI. Same format the AI returns (minimal stickers: the joke is in the pose). Add your own photos here the same way.",
+  "courgette_duck.jpg": {
+    "resembles": "a duck waddling off to market",
+    "object_name": "Duck",
+    "tagline": "Waddling into your stir-fry.",
+    "veg_type": "courgette",
+    "props": [
+      {
+        "type": "leg",
+        "x": 0.375,
+        "y": 1.097,
+        "size": 0.13,
+        "angle": 12,
+        "flip": false
+      },
+      {
+        "type": "leg",
+        "x": 0.581,
+        "y": 1.118,
+        "size": 0.13,
+        "angle": -10,
+        "flip": false
+      },
+      {
+        "type": "eye_dot",
+        "x": 0.74,
+        "y": 0.19,
+        "size": 0.064,
+        "angle": 0,
+        "flip": false
+      },
+      {
+        "type": "mouth_smile",
+        "x": 0.84,
+        "y": 0.31,
+        "size": 0.09,
+        "angle": -15,
+        "flip": false
+      }
+    ]
+  },
+  "carrot_twins.jpg": {
+    "resembles": "a tiny head on two very long legs",
+    "object_name": "All Legs",
+    "tagline": "Legs for days.",
+    "veg_type": "carrot",
+    "props": [
+      {
+        "type": "eye_dot",
+        "x": 0.43,
+        "y": 0.045,
+        "size": 0.056,
+        "angle": 0,
+        "flip": false
+      },
+      {
+        "type": "eye_dot",
+        "x": 0.57,
+        "y": 0.045,
+        "size": 0.056,
+        "angle": 0,
+        "flip": false
+      },
+      {
+        "type": "mouth_open",
+        "x": 0.5,
+        "y": 0.085,
+        "size": 0.053,
+        "angle": 0,
+        "flip": false
+      },
+      {
+        "type": "arm",
+        "x": -0.093,
+        "y": 0.038,
+        "size": 0.2,
+        "angle": -35,
+        "flip": true
+      },
+      {
+        "type": "arm",
+        "x": 1.093,
+        "y": 0.038,
+        "size": 0.2,
+        "angle": -35,
+        "flip": false
+      }
+    ]
+  },
+  "carrot_lump.jpg": {
+    "resembles": "someone lounging with an arm behind their head",
+    "object_name": "Couch Carrot",
+    "tagline": "Lying low until dinner.",
+    "veg_type": "carrot",
+    "props": [
+      {
+        "type": "eye_happy",
+        "x": 0.86,
+        "y": 0.36,
+        "size": 0.049,
+        "angle": 0,
+        "flip": false
+      },
+      {
+        "type": "eye_happy",
+        "x": 0.93,
+        "y": 0.36,
+        "size": 0.049,
+        "angle": 0,
+        "flip": false
+      },
+      {
+        "type": "mouth_smile",
+        "x": 0.9,
+        "y": 0.55,
+        "size": 0.06,
+        "angle": 0,
+        "flip": false
+      },
+      {
+        "type": "blush",
+        "x": 0.83,
+        "y": 0.5,
+        "size": 0.036,
+        "angle": 0,
+        "flip": false
+      },
+      {
+        "type": "arm_bent",
+        "x": 0.888,
+        "y": 0.004,
+        "size": 0.13,
+        "angle": -60,
+        "flip": false
+      },
+      {
+        "type": "leg",
+        "x": -0.059,
+        "y": 0.527,
+        "size": 0.09,
+        "angle": 70,
+        "flip": true
+      },
+      {
+        "type": "leg",
+        "x": -0.054,
+        "y": 0.53,
+        "size": 0.09,
+        "angle": 95,
+        "flip": true
+      }
+    ]
+  },
+  "potato_heart.jpg": {
+    "resembles": "a heart with arms open for a hug",
+    "object_name": "Hug Me",
+    "tagline": "Love at first bite.",
+    "veg_type": "potato",
+    "props": [
+      {
+        "type": "eye_dot",
+        "x": 0.44,
+        "y": 0.48,
+        "size": 0.08,
+        "angle": 0,
+        "flip": false
+      },
+      {
+        "type": "eye_dot",
+        "x": 0.56,
+        "y": 0.48,
+        "size": 0.08,
+        "angle": 0,
+        "flip": false
+      },
+      {
+        "type": "mouth_smile",
+        "x": 0.5,
+        "y": 0.6,
+        "size": 0.12,
+        "angle": 0,
+        "flip": false
+      },
+      {
+        "type": "blush",
+        "x": 0.36,
+        "y": 0.58,
+        "size": 0.084,
+        "angle": 0,
+        "flip": false
+      },
+      {
+        "type": "blush",
+        "x": 0.64,
+        "y": 0.58,
+        "size": 0.084,
+        "angle": 0,
+        "flip": false
+      },
+      {
+        "type": "arm_bent",
+        "x": -0.059,
+        "y": 0.29,
+        "size": 0.22,
+        "angle": 0,
+        "flip": true
+      },
+      {
+        "type": "arm_bent",
+        "x": 1.059,
+        "y": 0.29,
+        "size": 0.22,
+        "angle": 0,
+        "flip": false
+      },
+      {
+        "type": "leg",
+        "x": 0.41,
+        "y": 1.064,
+        "size": 0.1,
+        "angle": 6,
+        "flip": false
+      },
+      {
+        "type": "leg",
+        "x": 0.59,
+        "y": 1.064,
+        "size": 0.1,
+        "angle": -6,
+        "flip": false
+      }
+    ]
+  },
+  "potato_sprouts.jpg": {
+    "resembles": "a potato sprinting with its hair flying",
+    "object_name": "Speedy Spud",
+    "tagline": "Racing to your roast.",
+    "veg_type": "potato",
+    "props": [
+      {
+        "type": "eye_dot",
+        "x": 0.82,
+        "y": 0.36,
+        "size": 0.056,
+        "angle": 0,
+        "flip": false
+      },
+      {
+        "type": "eye_dot",
+        "x": 0.9,
+        "y": 0.36,
+        "size": 0.056,
+        "angle": 0,
+        "flip": false
+      },
+      {
+        "type": "mouth_open",
+        "x": 0.87,
+        "y": 0.52,
+        "size": 0.068,
+        "angle": 0,
+        "flip": false
+      },
+      {
+        "type": "leg",
+        "x": 0.325,
+        "y": 1.106,
+        "size": 0.14,
+        "angle": 35,
+        "flip": false
+      },
+      {
+        "type": "leg",
+        "x": 0.665,
+        "y": 1.117,
+        "size": 0.14,
+        "angle": -30,
+        "flip": false
+      },
+      {
+        "type": "arm",
+        "x": 1.039,
+        "y": 0.646,
+        "size": 0.2,
+        "angle": 40,
+        "flip": false
+      },
+      {
+        "type": "arm",
+        "x": -0.009,
+        "y": 0.404,
+        "size": 0.2,
+        "angle": -40,
+        "flip": true
+      }
+    ]
+  },
+  "potato_double_dark_bg.jpg": {
+    "resembles": "a small potato getting a piggyback from a big one",
+    "object_name": "Piggyback",
+    "tagline": "Twice the spud, same great taste.",
+    "veg_type": "potato",
+    "props": [
+      {
+        "type": "eye_dot",
+        "x": 0.24,
+        "y": 0.42,
+        "size": 0.056,
+        "angle": 0,
+        "flip": false
+      },
+      {
+        "type": "eye_dot",
+        "x": 0.34,
+        "y": 0.42,
+        "size": 0.056,
+        "angle": 0,
+        "flip": false
+      },
+      {
+        "type": "mouth_open",
+        "x": 0.29,
+        "y": 0.53,
+        "size": 0.075,
+        "angle": 0,
+        "flip": false
+      },
+      {
+        "type": "eye_happy",
+        "x": 0.78,
+        "y": 0.36,
+        "size": 0.056,
+        "angle": 0,
+        "flip": false
+      },
+      {
+        "type": "eye_happy",
+        "x": 0.88,
+        "y": 0.37,
+        "size": 0.056,
+        "angle": 0,
+        "flip": false
+      },
+      {
+        "type": "mouth_smile",
+        "x": 0.83,
+        "y": 0.47,
+        "size": 0.075,
+        "angle": 0,
+        "flip": false
+      },
+      {
+        "type": "arm_bent",
+        "x": 1.038,
+        "y": 0.239,
+        "size": 0.15,
+        "angle": 0,
+        "flip": false
+      },
+      {
+        "type": "leg",
+        "x": 0.212,
+        "y": 1.066,
+        "size": 0.12,
+        "angle": 4,
+        "flip": false
+      },
+      {
+        "type": "leg",
+        "x": 0.428,
+        "y": 1.086,
+        "size": 0.12,
+        "angle": -4,
+        "flip": false
+      }
+    ]
+  },
+  "apple_twin.jpg": {
+    "resembles": "two best friends waving together",
+    "object_name": "Best Friends",
+    "tagline": "Inseparable since the orchard.",
+    "veg_type": "apple",
+    "props": [
+      {
+        "type": "eye_dot",
+        "x": 0.22,
+        "y": 0.44,
+        "size": 0.056,
+        "angle": 0,
+        "flip": false
+      },
+      {
+        "type": "eye_dot",
+        "x": 0.32,
+        "y": 0.44,
+        "size": 0.056,
+        "angle": 0,
+        "flip": false
+      },
+      {
+        "type": "mouth_smile",
+        "x": 0.27,
+        "y": 0.56,
+        "size": 0.09,
+        "angle": 0,
+        "flip": false
+      },
+      {
+        "type": "eye_happy",
+        "x": 0.68,
+        "y": 0.44,
+        "size": 0.063,
+        "angle": 0,
+        "flip": false
+      },
+      {
+        "type": "eye_happy",
+        "x": 0.79,
+        "y": 0.44,
+        "size": 0.063,
+        "angle": 0,
+        "flip": false
+      },
+      {
+        "type": "mouth_open",
+        "x": 0.735,
+        "y": 0.56,
+        "size": 0.075,
+        "angle": 0,
+        "flip": false
+      },
+      {
+        "type": "arm_bent",
+        "x": -0.07,
+        "y": 0.323,
+        "size": 0.2,
+        "angle": 0,
+        "flip": true
+      },
+      {
+        "type": "arm_bent",
+        "x": 1.07,
+        "y": 0.323,
+        "size": 0.2,
+        "angle": 0,
+        "flip": false
+      }
+    ]
+  }
+}

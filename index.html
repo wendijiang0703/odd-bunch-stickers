@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Odd Bunch Sticker Station</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@800&family=Lora:ital@1&display=swap">
+<script async src="https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.10.0-release.1/dist/opencv.js"></script>
+<script src="engine.js"></script>
+
+<style>
+  :root {
+    --bg: #101216; --panel: #1a1d22; --panel2: #22262c; --line: #2f343c; --text: #e8eaed; --muted: #8a919b;
+    --yellow: #f5c400; --green: #27c26c; --red: #ff4f4f; --amber: #ffad1f; --blue: #3d8fe0;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+         display: flex; flex-direction: column; overflow: hidden; }
+  @media (max-width: 1100px) { body { overflow: auto; height: auto; } }
+
+  /* status bar */
+  .bar { display: flex; align-items: stretch; gap: 1px; background: var(--line); border-bottom: 1px solid var(--line); flex: none; }
+  .cell { background: var(--panel); padding: 8px 14px; display: flex; flex-direction: column; justify-content: center; min-width: 110px; }
+  .cell .k { font-size: 10px; letter-spacing: .12em; color: var(--muted); text-transform: uppercase; }
+  .cell .v { font: 600 16px var(--mono); white-space: nowrap; }
+  .cell.grow { flex: 1; }
+  .lamp { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 7px; vertical-align: 1px; background: #444; }
+  .lamp.g { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .lamp.a { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+  .lamp.r { background: var(--red); box-shadow: 0 0 8px var(--red); }
+  .lamp.off { background: #3a3f47; }
+  .cell.click { cursor: pointer; } .cell.click:hover { background: var(--panel2); }
+
+  /* columns */
+  .grid { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) minmax(320px, .85fr); gap: 1px; background: var(--line); }
+  @media (max-width: 1100px) { .grid { grid-template-columns: 1fr; } }
+  .col { background: var(--bg); display: flex; flex-direction: column; min-height: 0; padding: 12px; gap: 10px; }
+  .hdr { display: flex; align-items: center; gap: 10px; font: 600 11px var(--mono); letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
+  .hdr .tag { margin-left: auto; padding: 3px 8px; border-radius: 3px; font-size: 11px; letter-spacing: .08em; }
+  .tag.ai { background: rgba(39,194,108,.15); color: var(--green); }
+  .tag.rules { background: rgba(255,173,31,.15); color: var(--amber); }
+
+  .view { position: relative; flex: 1; min-height: 240px; background: #0b0c0f; border: 1px solid var(--line); border-radius: 4px;
+          display: grid; place-items: center; overflow: hidden; }
+  .view video, .view > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
+  .view .hint { color: var(--muted); font: 13px var(--mono); text-align: center; padding: 20px; }
+  .view.drop { outline: 3px dashed var(--yellow); outline-offset: -8px; }
+  .reticle { position: absolute; inset: 12%; border: 2px solid rgba(245,196,0,.35); border-radius: 6px; pointer-events: none; }
+
+  button, select { font: 600 13px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--text);
+           background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; cursor: pointer; }
+  button:hover:not(:disabled) { border-color: #4a515b; background: #2a2f36; }
+  button:disabled { opacity: .35; cursor: not-allowed; }
+  button kbd { font: inherit; opacity: .6; margin-left: 6px; }
+  .big { font-size: 22px; padding: 18px; letter-spacing: .12em; width: 100%; }
+  .capture { background: var(--yellow); color: #111; border-color: var(--yellow); }
+  .capture:hover:not(:disabled) { background: #ffd633; }
+  .print { background: var(--green); color: #06210f; border-color: var(--green); }
+  .print:hover:not(:disabled) { background: #3ad67f; }
+  .row { display: flex; gap: 8px; } .row > * { flex: 1; }
+  .thumbs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; flex: none; }
+  .thumbs img { width: 54px; height: 54px; object-fit: cover; border-radius: 3px; border: 1px solid var(--line); cursor: pointer; flex: none; }
+  .thumbs img:hover { border-color: var(--yellow); }
+
+  /* match column */
+  .name { width: 100%; background: transparent; border: 1px solid transparent; color: var(--text); font: 800 40px system-ui;
+          letter-spacing: .02em; text-transform: uppercase; padding: 0 4px; border-radius: 4px; }
+  .tagline { width: 100%; background: transparent; border: 1px solid transparent; color: var(--muted); font: italic 17px Georgia, serif; padding: 2px 4px; border-radius: 4px; }
+  .name:hover, .tagline:hover, .name:focus, .tagline:focus { border-color: var(--line); outline: none; background: var(--panel); }
+  .resembles { font: 12px var(--mono); color: var(--muted); padding: 0 4px; }
+  #stage { position: relative; touch-action: none; user-select: none; max-width: 100%; max-height: 100%;
+           background-color: #2a2e34; background-image: linear-gradient(45deg,#30353c 25%,transparent 25%,transparent 75%,#30353c 75%),
+           linear-gradient(45deg,#30353c 25%,transparent 25%,transparent 75%,#30353c 75%);
+           background-size: 24px 24px; background-position: 0 0, 12px 12px; }
+  #stage img { width: 100%; height: 100%; display: block; pointer-events: none; }
+  .h { position: absolute; width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%; cursor: grab;
+       background: transparent; border: 2px solid rgba(255,255,255,.9); box-shadow: 0 0 0 2px rgba(0,0,0,.55), inset 0 0 0 2px rgba(0,0,0,.35); }
+  .h::after { content: ""; position: absolute; left: 50%; top: 50%; width: 4px; height: 4px; margin: -2px; border-radius: 50%; background: #fff; }
+  .h.sel { border-color: var(--yellow); width: 34px; height: 34px; margin: -17px 0 0 -17px; box-shadow: 0 0 0 2px rgba(0,0,0,.6), 0 0 12px var(--yellow); }
+  .h.sel::after { background: var(--yellow); }
+  .h:active { cursor: grabbing; }
+  #stage.nohandles .h { display: none; }
+  .tools { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; flex: none; }
+  .tools .sel-name { font: 600 12px var(--mono); color: var(--yellow); min-width: 120px; }
+  .tools button { padding: 8px 10px; }
+
+  /* output column */
+  .labelbox { position: relative; flex: 1; min-height: 260px; display: grid; place-items: center; background: #0b0c0f; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+  .labelbox img { position: absolute; inset: 0; margin: auto; max-width: calc(100% - 20px); max-height: calc(100% - 20px); box-shadow: 0 6px 30px rgba(0,0,0,.6); border-radius: 4px; }
+  .msg { font: 12px var(--mono); border-radius: 4px; padding: 8px 10px; flex: none; }
+  .msg.warn { background: rgba(255,173,31,.12); color: var(--amber); border: 1px solid rgba(255,173,31,.35); }
+  .msg.err { background: rgba(255,79,79,.12); color: var(--red); border: 1px solid rgba(255,79,79,.4); }
+  .msg.ok { background: rgba(39,194,108,.1); color: var(--green); border: 1px solid rgba(39,194,108,.3); }
+  .history { display: flex; gap: 6px; flex: none; overflow-x: auto; min-height: 76px; }
+  .history img { height: 72px; border-radius: 2px; border: 1px solid var(--line); }
+  .history .printed { outline: 2px solid var(--green); }
+
+  #keyDlg { position: fixed; inset: 0; background: rgba(10,11,14,.75); display: none; place-items: center; z-index: 10; }
+  #keyDlg .box { width: min(520px, 92vw); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+  #keyDlg h3 { margin: 0; font: 600 13px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--yellow); }
+  #keyDlg p { margin: 0; color: var(--muted); font-size: 13px; }
+  #keyDlg input { font: 15px var(--mono); padding: 12px; background: #0b0c0f; color: var(--text); border: 1px solid var(--line); border-radius: 4px; }
+  #keyDlg input:focus { outline: none; border-color: var(--yellow); }
+  .attn { animation: attn 1.4s ease-in-out infinite; }
+  @keyframes attn { 50% { background: #3a3110; } }
+  #busy { position: fixed; inset: 0; background: rgba(10,11,14,.7); display: none; place-items: center; z-index: 9; }
+  #busy .box { font: 600 16px var(--mono); letter-spacing: .1em; color: var(--yellow); text-transform: uppercase; text-align: center; }
+  .bars { display: flex; gap: 6px; justify-content: center; margin-bottom: 14px; }
+  .bars i { width: 10px; height: 34px; background: var(--yellow); animation: pulse 0.9s infinite ease-in-out; }
+  .bars i:nth-child(2) { animation-delay: .15s; } .bars i:nth-child(3) { animation-delay: .3s; } .bars i:nth-child(4) { animation-delay: .45s; }
+  @keyframes pulse { 0%, 100% { opacity: .2; transform: scaleY(.5); } 50% { opacity: 1; transform: scaleY(1); } }
+</style>
+</head>
+<body>
+<div class="bar">
+  <div class="cell click" id="aiCell" title="Click to switch between AI and offline rules">
+    <span class="k">AI</span><span class="v"><span class="lamp off" id="aiLamp"></span><span id="aiVal">…</span></span></div>
+  <div class="cell"><span class="k">Camera</span><span class="v"><span class="lamp off" id="camLamp"></span><span id="camVal">OFF</span></span></div>
+  <div class="cell"><span class="k">Run</span><span class="v" id="runVal">----</span></div>
+  <div class="cell"><span class="k">Cycle</span><span class="v" id="cycleVal">-.- s</span></div>
+  <div class="cell"><span class="k">Printed</span><span class="v" id="printedVal">0</span></div>
+  <div class="cell grow"><span class="k">Status</span><span class="v" id="statusVal" style="font-size:13px">READY</span></div>
+</div>
+
+<div class="grid">
+  <!-- INPUT -->
+  <section class="col">
+    <div class="hdr">01 · Input</div>
+    <div class="view" id="inView">
+      <video id="video" autoplay playsinline muted hidden></video>
+      <img id="inImg" alt="" hidden>
+      <div class="reticle" id="reticle" hidden></div>
+      <div class="hint" id="inHint">CAMERA OFF<br><br>Start the camera, load a photo,<br>or drop an image here.</div>
+    </div>
+    <button class="big capture" id="captureBtn">Capture <kbd>Space</kbd></button>
+    <div class="row">
+      <button id="camBtn">Camera on</button>
+      <button id="fileBtn">Load photo</button>
+    </div>
+    <input type="file" id="file" accept="image/*" hidden>
+    <div class="hdr">Test set</div>
+    <div class="thumbs" id="samples"></div>
+  </section>
+
+  <!-- MATCH -->
+  <section class="col">
+    <div class="hdr">02 · Match <span class="tag" id="srcTag" hidden></span></div>
+    <input class="name" id="name" placeholder="—" disabled aria-label="Object name">
+    <input class="tagline" id="tagline" placeholder="" disabled aria-label="Tagline">
+    <div class="resembles" id="resembles"></div>
+    <div class="view" id="stageWrap"><div class="hint" id="stageHint">NO ITEM</div><div id="stage" hidden><img id="stageImg" alt=""></div></div>
+    <div class="tools">
+      <span class="sel-name" id="selName">NO STICKER SELECTED</span>
+      <button data-act="smaller" title="Smaller ( [ )">−</button>
+      <button data-act="bigger" title="Bigger ( ] )">+</button>
+      <button data-act="rotl" title="Rotate left ( , )">⟲</button>
+      <button data-act="rotr" title="Rotate right ( . )">⟳</button>
+      <button data-act="flip" title="Flip ( F )">Flip</button>
+      <button data-act="del" title="Delete ( Backspace )">Del</button>
+      <select id="addSel" title="Add a sticker"><option value="">+ Add sticker</option></select>
+      <button id="resetBtn" title="Back to the AI's version">Reset</button>
+      <button id="handlesBtn" title="Show / hide handles ( H )">Handles</button>
+    </div>
+  </section>
+
+  <!-- OUTPUT -->
+  <section class="col">
+    <div class="hdr">03 · Label 50 × 70 mm</div>
+    <div class="labelbox"><img id="labelImg" alt="" hidden><span class="hint" id="labelHint" style="color:var(--muted);font:13px var(--mono)">WAITING</span></div>
+    <div id="msgs"></div>
+    <button class="big print" id="printBtn" disabled>Print <kbd>P</kbd></button>
+    <div class="row">
+      <button id="redoBtn" disabled>Redo AI <kbd>R</kbd></button>
+      <button id="dlBtn" disabled>Save PNG</button>
+    </div>
+    <div class="hdr">This shift</div>
+    <div class="history" id="history"></div>
+  </section>
+</div>
+
+<div id="keyDlg" role="dialog" aria-modal="true" aria-labelledby="keyTitle">
+  <div class="box">
+    <h3 id="keyTitle">AI key</h3>
+    <p id="keyInfo"></p>
+    <input id="keyInput" type="password" placeholder="Paste your Gemini API key here" autocomplete="off" spellcheck="false">
+    <div class="msg" id="keyMsg" hidden></div>
+    <div class="row">
+      <button class="print" id="keySave">Check &amp; save</button>
+      <button id="keyOffline" hidden></button>
+      <button id="keyClose">Close</button>
+    </div>
+    <p>Get a free key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="color:var(--yellow)">aistudio.google.com/apikey</a> (copy button). The key is checked with Google and then kept only in this browser; photos go only to Google. Nothing is sent to us.</p>
+  </div>
+</div>
+
+<div id="busy"><div class="box"><div class="bars"><i></i><i></i><i></i><i></i></div><span id="busyMsg">Working</span></div></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const S = {status: null, offline: false, stream: null, lastPhoto: null, run: null, original: null, ch: null,
+           frame: null, sel: -1, printed: 0, seq: 0, busyRender: false, again: false, timer: null};
+
+let ENGINE_READY = null;
+async function api(path, body) {
+  if (!ENGINE_READY) { status("Loading vision engine (first visit downloads ~10 MB)…"); ENGINE_READY = Engine.init(); }
+  const info = await ENGINE_READY;
+  const keyStatus = () => Engine.getKey()
+    ? {provider: "gemini", reason: "Gemini, with the key saved in this browser"}
+    : {provider: "offline", reason: "no Gemini key in this browser yet"};
+  try {
+    if (path === "/api/status") { status("Ready"); return {...keyStatus(), samples: info.samples, props: info.props}; }
+    if (path === "/api/process") return await Engine.process(body.image, body.name, body.offline);
+    if (path === "/api/rerender") return Engine.rerender(body.character);
+    if (path === "/api/key") {
+      const key = String(body.key || "").replace(/\s+/g, "");
+      if (key.length < 20) return {ok: false, error: "That does not look like a key. Copy it with the copy button on aistudio.google.com/apikey."};
+      const res = await Engine.checkKey(key);
+      if (!res.ok) return res;
+      try { localStorage.setItem(Engine.KEY_STORE, key); } catch (e) { return {ok: false, error: "This browser blocks saving (private mode?)."}; }
+      return {...res, ...keyStatus()};
+    }
+    if (path === "/api/print") {
+      const f = document.createElement("iframe");
+      f.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0";
+      document.body.appendChild(f);
+      f.srcdoc = `<style>@page{size:50mm 70mm;margin:0}html,body{margin:0}img{width:50mm;height:70mm;display:block}</style><img src="${$("#labelImg").src}">`;
+      f.onload = () => { f.contentWindow.focus(); f.contentWindow.print(); setTimeout(() => f.remove(), 60000); };
+      return {ok: true, message: "print dialog opened (choose 100% / actual size)"};
+    }
+    return {ok: false, error: "unknown action"};
+  } catch (e) { return {ok: false, error: e.message || String(e)}; }
+}
+const status = (t) => $("#statusVal").textContent = t.toUpperCase();
+
+// ------------------------------------------------------------ status bar
+function paintAI() {
+  const p = S.status.provider, useAI = p !== "offline" && !S.offline;
+  $("#aiLamp").className = "lamp " + (useAI ? "g" : "a");
+  $("#aiCell").classList.toggle("attn", p === "offline");
+  $("#aiCell").querySelector(".k").textContent = p === "offline" ? "AI · click to connect" : "AI";
+  $("#aiVal").textContent = useAI ? p.toUpperCase() : (p === "offline" && !S.offline ? "DEMO PRESETS" : "OFFLINE RULES");
+  $("#aiCell").title = useAI ? `${S.status.reason}. Click to use the offline rules.`
+                             : (p === "offline" ? `No AI: ${S.status.reason}. Sample photos use hand-written presets, other photos get a simple face.`
+                                                : "Offline by choice. Click to use " + p);
+}
+function openKey() {
+  const p = S.status.provider;
+  $("#keyInfo").textContent = p === "offline"
+    ? "No AI connected, so the station uses demo presets and simple faces. Paste a Gemini key to let the AI match objects."
+    : `Connected: ${S.status.reason}.` + (S.offline ? " Currently paused (offline rules)." : "") + " Paste a new key to replace it.";
+  $("#keyOffline").hidden = p === "offline";
+  $("#keyOffline").textContent = S.offline ? "Use AI again" : "Pause AI (offline)";
+  $("#keyMsg").hidden = true; $("#keyInput").value = "";
+  $("#keyDlg").style.display = "grid"; setTimeout(() => $("#keyInput").focus(), 50);
+}
+const closeKey = () => { $("#keyDlg").style.display = "none"; };
+$("#aiCell").onclick = openKey;
+$("#keyClose").onclick = closeKey;
+$("#keyOffline").onclick = () => { S.offline = !S.offline; paintAI(); closeKey(); };
+$("#keyInput").onkeydown = e => { if (e.key === "Enter") $("#keySave").click(); };
+$("#keySave").onclick = async () => {
+  const key = $("#keyInput").value.trim(), msg = $("#keyMsg");
+  if (!key) { msg.hidden = false; msg.className = "msg err"; msg.textContent = "Paste the key first."; return; }
+  $("#keySave").disabled = true; msg.hidden = false; msg.className = "msg warn"; msg.textContent = "Checking with Google…";
+  const res = await api("/api/key", {key});
+  $("#keySave").disabled = false; $("#keyInput").value = "";
+  if (!res.ok) { msg.className = "msg err"; msg.textContent = res.error; return; }
+  S.status.provider = res.provider; S.status.reason = res.reason; S.offline = false; paintAI();
+  msg.className = "msg ok"; msg.textContent = "Connected. " + res.message;
+  status("AI connected · " + res.provider);
+  setTimeout(closeKey, 1200);
+};
+
+async function init() {
+  S.status = await api("/api/status");
+  paintAI();
+  $("#samples").innerHTML = S.status.samples.map(n => `<img src="samples/${encodeURIComponent(n)}" data-name="${esc(n)}" title="${esc(n)}" alt="">`).join("");
+  $("#addSel").innerHTML = `<option value="">+ Add sticker</option>` +
+    Object.entries(S.status.props).map(([t, d]) => `<option value="${t}" title="${esc(d)}">${t.replace(/_/g, " ")}</option>`).join("");
+  setTools();
+}
+
+// ------------------------------------------------------------ input
+function showInput(src) {
+  $("#inHint").hidden = true; $("#video").hidden = true; $("#reticle").hidden = true;
+  const img = $("#inImg"); img.src = src; img.hidden = false;
+}
+$("#camBtn").onclick = async () => {
+  if (S.stream) { S.stream.getTracks().forEach(t => t.stop()); S.stream = null; return camUI(); }
+  try { S.stream = await navigator.mediaDevices.getUserMedia({video: {width: {ideal: 1920}, height: {ideal: 1080}}}); }
+  catch (e) { status("Camera error: " + e.message); return; }
+  $("#video").srcObject = S.stream; camUI();
+};
+function camUI() {
+  const on = !!S.stream;
+  $("#camLamp").className = "lamp " + (on ? "g" : "off"); $("#camVal").textContent = on ? "LIVE" : "OFF";
+  $("#camBtn").textContent = on ? "Camera off" : "Camera on";
+  $("#video").hidden = !on; $("#reticle").hidden = !on; $("#inImg").hidden = on || !$("#inImg").src;
+  $("#inHint").hidden = on || !!$("#inImg").src;
+}
+$("#captureBtn").onclick = () => {
+  if (S.stream) {
+    const v = $("#video"), c = document.createElement("canvas");
+    c.width = v.videoWidth; c.height = v.videoHeight; if (!c.width) return;
+    c.getContext("2d").drawImage(v, 0, 0);
+    return run(c.toDataURL("image/jpeg", 0.92), "camera");
+  }
+  $("#file").click();  // no camera: capture = pick a photo
+};
+$("#fileBtn").onclick = () => $("#file").click();
+$("#file").onchange = e => { loadFile(e.target.files[0]); e.target.value = ""; };
+function loadFile(f) {
+  if (!f || !f.type.startsWith("image/")) return status("Not an image file");
+  const fr = new FileReader(); fr.onload = () => run(fr.result, f.name); fr.readAsDataURL(f);
+}
+const view = $("#inView");
+["dragenter", "dragover"].forEach(ev => view.addEventListener(ev, e => { e.preventDefault(); view.classList.add("drop"); }));
+["dragleave", "drop"].forEach(ev => view.addEventListener(ev, e => { e.preventDefault(); view.classList.remove("drop"); }));
+view.addEventListener("drop", e => loadFile(e.dataTransfer.files[0]));
+document.addEventListener("dragover", e => e.preventDefault());
+document.addEventListener("drop", e => e.preventDefault());
+$("#samples").onclick = async e => {
+  const n = e.target.dataset?.name; if (!n) return;
+  const blob = await (await fetch(`samples/${encodeURIComponent(n)}`)).blob();
+  const fr = new FileReader(); fr.onload = () => run(fr.result, n); fr.readAsDataURL(blob);
+};
+
+// ------------------------------------------------------------ run pipeline
+function busy(on) {
+  $("#busy").style.display = on ? "grid" : "none";
+  clearInterval(busy.t); if (!on) return;
+  const ai = S.status.provider !== "offline" && !S.offline;
+  const steps = ["Isolating item", "Measuring shape", ai ? `Asking ${S.status.provider}` : "Matching object", "Rendering label"];
+  let i = 0; $("#busyMsg").textContent = steps[0];
+  busy.t = setInterval(() => { i = Math.min(i + 1, steps.length - 1); $("#busyMsg").textContent = steps[i]; }, 600);
+}
+
+async function run(data, name) {
+  S.lastPhoto = {data, name};
+  if (!S.stream) showInput(data);
+  busy(true); status("Processing " + name);
+  const res = await api("/api/process", {image: data, name, offline: S.offline});
+  busy(false);
+  S.seq++; S.run = res; S.sel = -1;
+  $("#runVal").textContent = res.edition ? String(res.edition).padStart(4, "0") : "----";
+  $("#cycleVal").textContent = res.timings?.t_total_s != null ? res.timings.t_total_s.toFixed(1) + " s" : "-.- s";
+  if (res.outline && !S.stream) showInput(res.outline);
+  const msgs = (res.warnings || []).map(w => `<div class="msg warn">⚠ ${esc(w)}</div>`);
+  if (!res.ok) {
+    msgs.push(`<div class="msg err">✕ ${esc(res.error)}</div>`);
+    $("#msgs").innerHTML = msgs.join(""); clearResult(); status("Rejected: no label"); return;
+  }
+  const m = res.match;
+  if (m.source === "rules") msgs.push(`<div class="msg warn">Offline rules used: ${esc(m.fallback_reason)}. Simple face only.</div>`);
+  $("#msgs").innerHTML = msgs.join("");
+  S.original = structuredClone(res.character); S.ch = structuredClone(res.character);
+  const tag = $("#srcTag"); tag.hidden = false;
+  tag.className = "tag " + (m.source === "claude" || m.source === "gemini" ? "ai" : "rules");
+  tag.textContent = m.source === "rules" ? "RULES" : m.source === "preset" ? "PRESET" : `${m.source.toUpperCase()} · ${m.seconds}s`;
+  showResult(res);
+  status(`Check, then print · ${res.character.object_name}`);
+}
+
+function clearResult() {
+  S.ch = null; $("#name").value = ""; $("#tagline").value = ""; $("#resembles").textContent = "";
+  $("#name").disabled = $("#tagline").disabled = true;
+  $("#stage").hidden = true; $("#stageHint").hidden = false; $("#labelImg").hidden = true; $("#labelHint").hidden = false;
+  $("#srcTag").hidden = true; ["#printBtn", "#dlBtn"].forEach(b => $(b).disabled = true);
+  $("#redoBtn").disabled = !S.lastPhoto; setTools();
+}
+
+function showResult(res) {
+  $("#name").disabled = $("#tagline").disabled = false;
+  $("#name").value = S.ch.object_name; $("#tagline").value = S.ch.tagline;
+  $("#resembles").textContent = `${S.ch.resembles}${S.ch.veg_type !== "no data" ? " · " + S.ch.veg_type : ""}`;
+  setEditor(res.editor_image, res.frame);
+  setLabel(res.label);
+  ["#printBtn", "#dlBtn", "#redoBtn"].forEach(b => $(b).disabled = false);
+}
+
+function setLabel(src) { $("#labelImg").src = src; $("#labelImg").hidden = false; $("#labelHint").hidden = true; }
+
+// ------------------------------------------------------------ editor
+function setEditor(src, frame) {
+  S.frame = frame;
+  $("#stageImg").src = src; $("#stage").hidden = false; $("#stageHint").hidden = true;
+  fitStage(); drawHandles();
+}
+function fitStage() {
+  if (!S.frame) return;
+  const wrap = $("#stageWrap").getBoundingClientRect(), a = S.frame.aspect;
+  let w = wrap.width - 16, h = w / a;
+  if (h > wrap.height - 16) { h = wrap.height - 16; w = h * a; }
+  $("#stage").style.width = w + "px"; $("#stage").style.height = h + "px";
+}
+addEventListener("resize", fitStage);
+
+const toCanvas = p => [S.frame.x0 + p.x * S.frame.bw, S.frame.y0 + p.y * S.frame.bh];
+const fromCanvas = (fx, fy) => [(fx - S.frame.x0) / S.frame.bw, (fy - S.frame.y0) / S.frame.bh];
+
+function drawHandles() {
+  const st = $("#stage"); st.querySelectorAll(".h").forEach(h => h.remove());
+  if (!S.ch) return;
+  S.ch.props.forEach((p, i) => {
+    const h = document.createElement("div"); h.className = "h" + (i === S.sel ? " sel" : ""); h.title = p.type;
+    const [fx, fy] = toCanvas(p); h.style.left = fx * 100 + "%"; h.style.top = fy * 100 + "%";
+    h.onpointerdown = e => {
+      e.preventDefault(); h.setPointerCapture(e.pointerId); select(i);
+      const move = ev => {
+        const r = st.getBoundingClientRect();
+        let [x, y] = fromCanvas((ev.clientX - r.left) / r.width, (ev.clientY - r.top) / r.height);
+        p.x = +Math.min(1.35, Math.max(-0.35, x)).toFixed(3); p.y = +Math.min(1.35, Math.max(-0.35, y)).toFixed(3);
+        const [cx, cy] = toCanvas(p); h.style.left = cx * 100 + "%"; h.style.top = cy * 100 + "%";
+      };
+      const up = () => { h.onpointermove = h.onpointerup = null; queue(0); };
+      h.onpointermove = move; h.onpointerup = up;
+    };
+    st.appendChild(h);
+  });
+}
+function select(i) { S.sel = i; drawHandles(); setTools(); }
+function setTools() {
+  const p = S.ch && S.ch.props[S.sel];
+  $("#selName").textContent = p ? p.type.replace(/_/g, " ").toUpperCase() : "NO STICKER SELECTED";
+  document.querySelectorAll(".tools [data-act]").forEach(b => b.disabled = !p);
+  $("#addSel").disabled = $("#resetBtn").disabled = $("#handlesBtn").disabled = !S.ch;
+}
+function act(a) {
+  const p = S.ch?.props[S.sel]; if (!p) return;
+  if (a === "bigger") p.size = +Math.min(1, p.size * 1.15).toFixed(3);
+  if (a === "smaller") p.size = +Math.max(0.03, p.size / 1.15).toFixed(3);
+  if (a === "rotl") p.angle = ((p.angle - 15 + 540) % 360) - 180;
+  if (a === "rotr") p.angle = ((p.angle + 15 + 540) % 360) - 180;
+  if (a === "flip") p.flip = !p.flip;
+  if (a === "del") { S.ch.props.splice(S.sel, 1); S.sel = -1; }
+  drawHandles(); setTools(); queue(0);
+}
+document.querySelectorAll(".tools [data-act]").forEach(b => b.onclick = () => act(b.dataset.act));
+$("#addSel").onchange = e => {
+  const t = e.target.value; e.target.value = ""; if (!t || !S.ch) return;
+  const size = {belt: .35, hat_top: .25, cap: .25, crown: .22, party_hat: .18, wing: .22, arm: .25, tail_fish: .2,
+                glasses: .25, sunglasses: .25, moustache: .18, bow_tie: .14, duck_foot: .15, shoe: .16, beak: .16,
+                eye: .08, eye_happy: .08, eye_sleepy: .08, eye_angry: .08, blush: .08, sparkle: .07,
+                eye_dot: .06, arm: .3, arm_bent: .25, leg: .25}[t] || .12;
+  S.ch.props.push({type: t, x: 0.5, y: 0.5, size, angle: 0, flip: false});
+  select(S.ch.props.length - 1); queue(0);
+};
+$("#resetBtn").onclick = () => { if (!S.original) return; S.ch = structuredClone(S.original); S.sel = -1;
+  $("#name").value = S.ch.object_name; $("#tagline").value = S.ch.tagline; drawHandles(); setTools(); queue(0); };
+$("#handlesBtn").onclick = () => $("#stage").classList.toggle("nohandles");
+$("#name").oninput = e => { if (S.ch) { S.ch.object_name = e.target.value; queue(500); } };
+$("#tagline").oninput = e => { if (S.ch) { S.ch.tagline = e.target.value; queue(500); } };
+
+// one re-render request at a time; the last edit always wins (screen and disk stay in step)
+function queue(delay) { clearTimeout(S.timer); S.timer = setTimeout(sendRender, delay); }
+async function sendRender() {
+  if (S.busyRender) { S.again = true; return; }
+  S.busyRender = true; const runId = S.run.run_id, seq = S.seq;
+  status("Updating label");
+  try {
+    const res = await api("/api/rerender", {run_id: runId, character: structuredClone(S.ch)});
+    if (seq !== S.seq) return;
+    if (!res.ok) { status("Edit error: " + res.error); return; }
+    $("#stageImg").src = res.editor_image; S.frame = res.frame; setLabel(res.label);
+    status(res.warnings.length ? "Check: " + res.warnings.join("; ") : `Edited · saved label_edited.png`);
+  } finally {
+    S.busyRender = false;
+    if (S.again) { S.again = false; sendRender(); }
+  }
+}
+
+// ------------------------------------------------------------ output
+$("#printBtn").onclick = async () => {
+  if (!S.run?.ok) return;
+  $("#printBtn").disabled = true; status("Sending to printer");
+  const res = await api("/api/print", {run_id: S.run.run_id});
+  $("#printBtn").disabled = false;
+  if (!res.ok) return status("Print error: " + res.error);
+  S.printed++; $("#printedVal").textContent = S.printed;
+  status("Printed · " + (res.message || "ok"));
+  const img = document.createElement("img"); img.src = $("#labelImg").src; img.className = "printed"; img.title = S.run.run_id;
+  $("#history").prepend(img);
+};
+$("#redoBtn").onclick = () => { if (S.lastPhoto) run(S.lastPhoto.data, S.lastPhoto.name); };
+$("#dlBtn").onclick = () => { const a = document.createElement("a"); a.href = $("#labelImg").src; a.download = `label-${S.run.run_id}.png`; a.click(); };
+
+// ------------------------------------------------------------ keyboard
+document.addEventListener("keydown", e => {
+  if ($("#keyDlg").style.display === "grid") { if (e.key === "Escape") closeKey(); return; }
+  if (["INPUT", "SELECT", "TEXTAREA"].includes(document.activeElement.tagName)) {
+    if (e.key === "Enter" || e.key === "Escape") document.activeElement.blur();
+    return;
+  }
+  const p = S.ch?.props[S.sel], step = e.shiftKey ? 0.05 : 0.01;
+  const k = e.key;
+  if (k === " ") { e.preventDefault(); $("#captureBtn").click(); }
+  else if (k === "p" || k === "P") $("#printBtn").click();
+  else if (k === "r" || k === "R") $("#redoBtn").click();
+  else if (k === "h" || k === "H") $("#handlesBtn").click();
+  else if (k === "Escape") select(-1);
+  else if (k === "Tab" && S.ch?.props.length) { e.preventDefault(); select((S.sel + (e.shiftKey ? -1 : 1) + S.ch.props.length) % S.ch.props.length); }
+  else if (!p) return;
+  else if (k === "[") act("smaller"); else if (k === "]") act("bigger");
+  else if (k === ",") act("rotl"); else if (k === ".") act("rotr");
+  else if (k === "f" || k === "F") act("flip");
+  else if (k === "Backspace" || k === "Delete") { e.preventDefault(); act("del"); }
+  else if (k.startsWith("Arrow")) {
+    e.preventDefault();
+    if (k === "ArrowLeft") p.x -= step; if (k === "ArrowRight") p.x += step;
+    if (k === "ArrowUp") p.y -= step; if (k === "ArrowDown") p.y += step;
+    p.x = +Math.min(1.35, Math.max(-0.35, p.x)).toFixed(3); p.y = +Math.min(1.35, Math.max(-0.35, p.y)).toFixed(3);
+    drawHandles(); queue(250);
+  }
+});
+
+init();
+</script>
+</body>
+</html>
