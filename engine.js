@@ -176,7 +176,7 @@ const Engine = (() => {
       if (!ok2) {
         small.delete(); raw.delete(); if (c) c.delete();
         if (r.mask) r.mask.delete(); if (r.contour) r.contour.delete();
-        throw new Error(`Could not find a single vegetable (${why}; grabcut: ${why2}). Use a plain white board and keep the veg away from the edges.`);
+        throw new Error(`Could not find a potato (${why}; grabcut: ${why2}). Use a plain white board and keep the potato away from the edges.`);
       }
       mask = r.mask; r.contour.delete();
     }
@@ -184,12 +184,12 @@ const Engine = (() => {
     const warnings = [];
     if (method.startsWith("grabcut (centre")) warnings.push("The background is not plain, so the outline may include some background. A plain white board works best.");
     const areas = contourAreas(raw); raw.delete(); small.delete();
-    if (areas.length > 1 && areas[1] > 0.3 * areas[0]) warnings.push("More than one object in the photo; using the largest. Photograph one veg at a time.");
+    if (areas.length > 1 && areas[1] > 0.3 * areas[0]) warnings.push("More than one object in the photo; using the largest. Photograph one potato at a time.");
     if (scale < 1) { const up = resizeMask(mask, W, H); mask.delete(); mask = up; }
     const r = largestBlob(mask); mask.delete();
     const bb = cv.boundingRect(r.contour);
     if (bb.x <= 1 || bb.y <= 1 || bb.x + bb.width >= W - 1 || bb.y + bb.height >= H - 1)
-      warnings.push("The veg touches the edge of the photo, so part of it may be cut off. Move it to the middle.");
+      warnings.push("The potato touches the edge of the photo, so part of it may be cut off. Move it to the middle.");
     return {mask: r.mask, contour: r.contour, bbox: [bb.x, bb.y, bb.width, bb.height], method, note, warnings};
   }
 
@@ -328,7 +328,7 @@ const Engine = (() => {
     const props = [P(a.eyes, -0.35, -0.22, ew), P(a.eyes, 0.35, -0.22, ew), P(a.mouth, 0, 0.3, 0.5)];
     if (a.extra === "blush") props.push(P("blush", -0.58, 0.1, 0.35), P("blush", 0.58, 0.1, 0.35));
     const tagline = a.taglines[f.area_px % a.taglines.length];
-    return [{resembles: a.resembles, object_name: a.name, tagline, veg_type: CFG.no_data, props}, reason];
+    return [{resembles: a.resembles, object_name: a.name, tagline, veg_type: "potato", props}, reason];
   }
 
   // ------------------------------------------------------------------ Gemini (match_ai.py)
@@ -368,12 +368,14 @@ const Engine = (() => {
   }
 
   async function geminiCall(key, body) {
-    const models = [...new Set([CFG.gemini.model, ...CFG.gemini.backups])], busy = [];
+    // busy replies from the fast model are usually brief: try it twice (2 s apart) before the slower backups
+    const models = [CFG.gemini.model, CFG.gemini.model, ...[...new Set(CFG.gemini.backups)].filter(m => m !== CFG.gemini.model)], busy = [];
     for (const m of models) {
+      if (busy.length && busy[busy.length - 1] === m) await new Promise(r => setTimeout(r, 2000));
       try { return [await geminiRequest(key, m, body), m]; }
       catch (e) { if (!(e instanceof Busy)) throw e; busy.push(m); }
     }
-    throw new Unavailable(`all Gemini models are busy right now (${busy.join(", ")}); try again in a minute`);
+    throw new Unavailable(`all Gemini models are busy right now (${[...new Set(busy)].join(", ")}); try again in a minute`);
   }
 
   async function checkKey(key) {
@@ -618,7 +620,11 @@ const Engine = (() => {
       const veg = canvas(w, h); cv.imshow(veg, rgba);
       const maskBytes = new Uint8Array(mroi.data); roi.delete(); mroi.delete(); alpha.delete(); rgba.delete();
       let ch = m.character;
-      if (m.source === "gemini") ch = attachLimbs(ch, maskBytes, w, h);
+      if (m.source === "gemini") {
+        ch = attachLimbs(ch, maskBytes, w, h);
+        if (!String(ch.veg_type || "").includes("potato"))
+          out.warnings = [...out.warnings, `This does not look like a potato (the AI saw: ${ch.veg_type}). Odd Bunch is for potatoes.`];
+      }
       const edition = nextEdition(), date = new Date().toLocaleDateString("en-GB", {day: "2-digit", month: "short", year: "numeric"});
       CUR = {veg, w, h, edition, date};
       const label = renderLabel(veg, w, h, ch, edition, date); lap("t_render_s");
